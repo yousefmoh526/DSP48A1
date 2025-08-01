@@ -4,7 +4,7 @@ This project implements and verifies a **DSP48A1 slice** from Xilinx Spartan-6 F
 
 ---
 
-## 📁 Repository Structure
+##  Repository Structure
 
 ```
 DSP48A1_Project/
@@ -30,11 +30,11 @@ DSP48A1_Project/
 
 ---
 
-## 🛠️ Project Overview
+##  Project Overview
 
 The project focuses on instantiating and simulating the DSP48A1 block with different control paths to validate its arithmetic functionality.
 
-### 🔢 Key Parameters Configured:
+###  Key Parameters Configured:
 
 * **Pipeline Registers:** A0REG = 0, A1REG = 1, B0REG = 0, B1REG = 1, etc.
 * **CARRYINSEL = "OPMODE5"**, B\_INPUT = "DIRECT"
@@ -44,9 +44,9 @@ These settings ensure realistic pipelining and timing in arithmetic processing.
 
 ---
 
-## ✅ Verification & Testing
+##  Verification & Testing
 
-### ✔️ **QuestaSim Simulation**
+###  **QuestaSim Simulation**
 
 * Testbench (`dsp48a1_tb.v`) is built to test **4 DSP operational paths**, each corresponding to a specific `OPMODE`.
 * Each path verifies different stages like:
@@ -56,13 +56,13 @@ These settings ensure realistic pipelining and timing in arithmetic processing.
   * Post-adder/subtractor
 * **Self-checking assertions** are used to confirm that outputs match expected values after appropriate clock cycles.
 
-### ✔️ **Waveform Analysis**
+###  **Waveform Analysis**
 
 * All simulations were visually inspected using QuestaSim waveform viewer (`wave.do`) to trace input propagation and confirm timing alignment with registers (DREG, MREG, PREG, etc.).
 
 ---
 
-## 🧪 DSP Path Verification Details
+##  DSP Path Verification Details
 
 | Path | Operation Type               | OPMODE        | Description                           |
 | ---- | ---------------------------- | ------------- | ------------------------------------- |
@@ -75,7 +75,7 @@ Each path is carefully timed, and expected outputs (P, M, CarryOut) are checked 
 
 ---
 
-## 🧰 Vivado Implementation
+##  Vivado Implementation
 
 * Synthesized and implemented in **Vivado** using part `xc7a200tffg1156-3`
 * Schematic screenshots and utilization/timing reports are included
@@ -89,7 +89,7 @@ Outputs include:
 
 ---
 
-## 🧹 Linting (Static Analysis)
+##  Linting (Static Analysis)
 
 * **Questa Lint** run with default methodology
 * No syntax, style, or synthesis-related errors or warnings
@@ -97,7 +97,7 @@ Outputs include:
 
 ---
 
-## 🔚 Conclusion
+##  Conclusion
 
 This project demonstrates how to accurately model, simulate, and verify a DSP48A1 slice in a modern FPGA development flow. It involves RTL design, simulation with assertion-based verification, static lint checking, and full synthesis with schematic analysis—representing industry-grade FPGA development practices.
 
