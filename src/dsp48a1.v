@@ -12,7 +12,8 @@ module DSP_48#(
     parameter CARRYOUTREG = 1,     
     parameter OPMODEREG = 1,       
     parameter CARRYINSEL = "OPMODE5", 
-    parameter B_INPUT = "DIRECT"  
+    parameter B_INPUT = "DIRECT",
+    parameter RSSTYPE ="SYNC"  
          
 ) (
     
@@ -67,7 +68,7 @@ module DSP_48#(
     reg [47:0] P_reg;
 
     wire [17:0] A0_wire, A1_wire;
-    wire [17:0] B0_wire, B1_wire;
+    wire [17:0] B0_wire, B1_wire,B2_wire;
     wire [47:0] C_wire;
     wire [17:0] D_wire;
     wire        CARRYIN_wire;
@@ -88,7 +89,7 @@ module DSP_48#(
     wire [47:0] DAB_concat;
 
     
-    assign B_mux_out = (B_INPUT=="DIRECT")B:BCIN;
+    assign B_mux_out = (B_INPUT=="DIRECT") ? B:BCIN;
 
     generate
     if(B0REG)
@@ -111,14 +112,14 @@ module DSP_48#(
     endgenerate
    
     generate
-    if(RSSTYPE =="SYNC")
+    if(RSSTYPE =="SYNC")begin
     always @(posedge CLK) begin
         if (RSTB)
             D_reg <= 18'b0;
         else if (CED)
             D_reg <= D;
     end
-    
+    end
     else begin
     always @(posedge CLK or posedge RSTD) begin
         if (RSTD)
@@ -126,21 +127,23 @@ module DSP_48#(
         else if (CED)
             D_reg <= D;
     end
+    end
     endgenerate
+
     assign D_wire = (DREG == 1) ? D_reg : D;
     
     
 
     
     generate
-    if(RSSTYPE =="SYNC")
+    if(RSSTYPE =="SYNC")begin
     always @(posedge CLK) begin
         if (RSTC)
             C_reg <= 18'b0;
         else if (CEC)
             C_reg <= D;
     end
-  
+  end
     else begin
     always @(posedge CLK or posedge RSTC) begin
         if (RSTC)
@@ -148,19 +151,20 @@ module DSP_48#(
         else if (CEC)
             C_reg <= C;
     end
+    end
     endgenerate
     assign C_wire = (CREG == 1) ? C_reg : C;
 
    
     generate
-    if(RSSTYPE =="SYNC")
+    if(RSSTYPE =="SYNC")begin
     always @(posedge CLK) begin
         if (RSTA)
             A0_reg <= 18'b0;
         else if (CEA)
             A0_reg <= A;
     end
-    
+    end
     else begin
     always @(posedge CLK or posedge RSTA) begin
         if (RSTA)
@@ -168,19 +172,20 @@ module DSP_48#(
         else if (CEA)
             A0_reg <= A;
     end
+    end
     endgenerate
     assign A0_wire = (A0REG == 1) ? A0_reg : A;
 
    
     generate
-    if(RSSTYPE =="SYNC")
+    if(RSSTYPE =="SYNC")begin
     always @(posedge CLK) begin
         if (RSTOPMODE)
             OPMODE_reg <= 18'b0;
         else if (CEOPMODE)
             OPMODE_reg <= OPMODE;
     end
-    
+    end
     else begin
     always @(posedge CLK or posedge RSTOPMODE) begin
         if (RSTOPMODE)
@@ -188,41 +193,50 @@ module DSP_48#(
         else if (CEA)
             OPMODE_reg <= OPMODE;
     end
+    end
     endgenerate
     assign OPMODE_wire = (OPMODEREG == 1) ? OPMODE_reg : OPMODE;
 
     
     assign DAB_concat = {D_wire[11:0], A0_wire, B0_wire};
     assign pre_adder_result = (OPMODE_wire[6] == 0) ? D_wire + B0_wire : D_wire - B0_wire; 
+     assign B1_wire = (OPMODE[4] == 0) ? B0_wire : pre_adder_result;
     generate
-    if(RSSTYPE =="SYNC")
+    if(RSSTYPE =="SYNC")begin
     always @(posedge CLK) begin
         if (RSTB)
             B1_reg <= 18'b0;
         else if (CEB)
-            B1_reg <= pre_adder_result;
+            B1_reg <= B1_wire;
     end
-    
+    end
     else begin
     always @(posedge CLK or posedge RSTB) begin
         if (RSTB)
             B1_reg <= 18'b0;
         else if (CEA)
-            B1_reg <= pre_adder_result;
+            B1_reg <= B1_wire;
+    end
     end
     endgenerate
-    assign B1_wire = (B1REG == 1) ? B1_reg : per_adder_result;
+   
+assign B2_wire = (B1REG==1) ? B1_reg : B1_wire ;
 
-    assign BCOUT = B1_wire;
+
+
+
+
+    assign BCOUT = B2_wire;
 
     
     generate
-    if(RSSTYPE =="SYNC")
+    if(RSSTYPE =="SYNC")begin
     always @(posedge CLK) begin
         if (RSTA)
             A1_reg <= 18'b0;
         else if (CEA)
             A1_reg <= A0_wire;
+    end
     end
     else begin
     always @(posedge CLK or posedge RSTA) begin
@@ -231,24 +245,26 @@ module DSP_48#(
         else if (CEA)
             A1_reg <= A0_wire;
     end
+    end
     endgenerate
     assign A1_wire = (A1REG == 1) ? A1_reg : A0_wire;
     
-    assign mult_result = A1_wire * B1_wire;
+    assign mult_result = A1_wire * B2_wire;
     generate
         if(CARRYINSEL == "OPMODE5")
-            assign CARRYIN_mux_out = opmode_wire[5];
+            assign CARRYIN_mux_out = OPMODE_wire[5];
         else
             assign CARRYIN_mux_out = CARRYIN;
     endgenerate
 
     generate
-    if(RSSTYPE =="SYNC")
+    if(RSSTYPE =="SYNC")begin
     always @(posedge CLK) begin
         if (RSTCARRYIN)
             CARRYIN_reg <= 18'b0;
         else if (CECARRYIN)
             CARRYIN_reg <= CARRYIN_mux_out;
+    end
     end
     else begin
     always @(posedge CLK or posedge RSTCARRYIN) begin
@@ -257,16 +273,18 @@ module DSP_48#(
         else if (CECARRYIN)
             CARRYIN_reg <= CARRYIN_mux_out;
     end
+    end
     endgenerate
     assign CARRYIN_wire = (CARRYINREG == 1) ? CARRYIN_reg : CARRYIN_mux_out;
     
     generate
-    if(RSSTYPE =="SYNC")
+    if(RSSTYPE =="SYNC")begin
     always @(posedge CLK) begin
         if (RSTM)
             M_reg <= 18'b0;
         else if (CEM)
             M_reg <= mult_result ;
+    end
     end
     else begin
     always @(posedge CLK or posedge RSTM) begin
@@ -274,6 +292,7 @@ module DSP_48#(
             M_reg <= 18'b0;
         else if (CEM)
             M_reg <= mult_result;
+    end
     end
     endgenerate
     assign M_wire = (MREG == 1) ? M_reg : mult_result;
@@ -298,12 +317,13 @@ module DSP_48#(
 
     
     generate
-    if(RSSTYPE =="SYNC")
+    if(RSSTYPE =="SYNC")begin
     always @(posedge CLK) begin
         if (RSTP)
             P_reg <= 18'b0;
         else if (CEP)
             P_reg <= post_adder_result ;
+    end
     end
     else begin
     always @(posedge CLK or posedge RSTP) begin
@@ -312,18 +332,20 @@ module DSP_48#(
         else if (CEP)
             P_reg <= post_adder_result;
     end
+    end
     endgenerate
     assign P_wire = (PREG == 1) ? P_reg : post_adder_result;
 
     assign P = P_wire;
     assign PCOUT = P_wire;
     generate
-    if(RSSTYPE =="SYNC")
+    if(RSSTYPE =="SYNC")begin
     always @(posedge CLK) begin
         if (RSTCARRYIN)
             CARRYOUT_reg <= 18'b0;
         else if (CECARRYIN)
             CARRYOUT_reg <= cyo ;
+    end
     end
     else begin
     always @(posedge CLK or posedge RSTM) begin
@@ -331,6 +353,7 @@ module DSP_48#(
             CARRYOUT_reg <= 18'b0;
         else if (CECARRYIN)
             CARRYOUT_reg <= cyo;
+    end
     end
     endgenerate
     assign CARRYOUT_wire = (CARRYOUTREG == 1) ? CARRYOUT_reg : cyo;
